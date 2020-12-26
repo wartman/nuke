@@ -20,7 +20,7 @@ class Main {
     var boxStyle = Css.rule({
       color: 'blue',
       backgroundColor: 'green',
-      width: Px(width),
+      width: atom.CssUnit.Px(width),
       height: Px(130)
     });
     

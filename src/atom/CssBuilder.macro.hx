@@ -108,44 +108,83 @@ class CssBuilder {
       case EObjectDecl(fields):
         parseRule(name, fields, staticValuesOnly);
       default: 
-        if (staticValuesOnly) ensureStaticValue(value);
+        if (staticValuesOnly) {
+          return CssAtom(macro @:pos(value.pos) $v{key + ':' + extractStaticValue(value) + ';'});
+        }
         CssAtom(macro @:pos(value.pos) $v{key} + ':' + (${value}:atom.CssValue) + ';');
     }
   }
 
-  static function ensureStaticValue(value:Expr) {
-    // Special case: Allow `atom.CssUnit` to be used as long as its params
-    // are static.
-    if (Context.unify(Context.typeof(value), Context.getType('atom.CssUnit'))) {
-      switch value.expr {
-        case ECall(_, params) if (params.length > 0):
-          ensureStaticValue(params[0]);
-          return;
-        default: return; 
+  // @todo: this could use some cleanup.
+  static function extractStaticValue(value:Expr):String {
+    function extract(e:Expr):String {
+      return switch e.expr {
+        case EField(a, b): 
+          extract(a) + '.' + b;
+        case EConst(CIdent(s)): 
+          s;
+        default:
+          Context.error('Invalid expression', value.pos);
+          null;
       }
     }
 
-    switch value.expr {
+    // Special case: Allow `atom.CssUnit` to be used as long as its params
+    // are static.
+    if (Context.unify(Context.typeof(value), Context.getType('atom.CssUnit'))) {
+      return switch value.expr {
+        case ECall(unit, params) if (params.length > 0):
+          var value = extractStaticValue(params[0]);
+          var suffix = switch unit.expr {
+            case EConst(CIdent(s)): switch s {
+              case 'Pct': '%';
+              case 'Sec': 's';
+              case 'Num': '';
+              default: s.toLowerCase();
+            }
+            case EField(_): switch extract(unit).split('.').pop() {
+              case 'Pct': '%';
+              case 'Sec': 's';
+              case 'Num': '';
+              case s: s.toLowerCase();
+            }
+            default: throw 'assert';
+          }
+          value + suffix;
+        case ECall(unit, _):
+          switch unit.expr {
+            case EConst(CIdent('Auto')): 'auto';
+            case EConst(CIdent('None')): '0';
+            case EField(_): switch extract(unit).split('.').pop() {
+              case 'Auto': 'auto';
+              case 'None': '0';
+              default: throw 'assert';
+            }
+            default: throw 'assert';
+          }
+        default:
+          ''; 
+      }
+    }
+
+    return switch value.expr {
       case EConst(CIdent(name)):
         var local = Context.getLocalClass().get();
         var f = local.findField(name, true);
         if (f != null && f.isFinal) {
-          return;
-        }
-        Context.error('A static value is requried', value.pos);
-      case EConst(_): value;
-      case EField(a, b): // todo: pull this out?
-        function extract(e:Expr):String {
-          return switch e.expr {
-            case EField(a, b): 
-              extract(a) + '.' + b;
-            case EConst(CIdent(s)): 
-              s;
-            default:
-              Context.error('Invalid expression', value.pos);
-              null;
+          return switch f.expr().expr {
+            case TConst(TString(s)): s;
+            case TConst(TInt(s)): Std.string(s);
+            case TConst(TFloat(s)): Std.string(s);
+            default: Context.error('A static value is requried', value.pos);
           }
         }
+        Context.error('A static value is requried', value.pos);
+        null;
+      case EConst(CString(s, _)): s;
+      case EConst(CInt(s)): Std.string(s);
+      case EConst(CFloat(s)): Std.string(s);
+      case EField(a, b): // todo: pull this out?
         var typeName = extract(a);
         if (typeName.indexOf('.') < 0) {
           typeName = getTypePath(typeName, Context.getLocalImports());
