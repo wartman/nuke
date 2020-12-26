@@ -17,36 +17,36 @@ typedef MediaQueryOptions = {
   // etc
 }
 
-// @todo: This API is confusing.
 class Css {
   public static macro function atoms(e) {
-    return atom.CssBuilder.generate(e);
+    return atom.CssBuilder.generateAtoms(e);
   }
   
   public static macro function rule(e) {
-    var css = atom.CssBuilder.generateString(e);
-    return macro @:privateAccess atom.Css.create(${css});
+    var name = haxe.macro.TypeTools.toString(haxe.macro.Context.getLocalType());
+    var min = haxe.macro.PositionTools.getInfos(e.pos).min;
+    var sel = getKey(name + min, 'css');
+    var css = atom.CssBuilder.generateString('.' + sel, e);
+    return macro {
+      Engine.getInstance().add($v{sel}, ${css});
+      new atom.ClassName($v{sel});
+    }
   }
 
-  public static macro function globalRule(e) {
-    var css = atom.CssBuilder.generateString(e);
+  public static macro function injectGlobalCss(e) {
+    var css = atom.CssBuilder.generateString(null, e);
     return macro @:privateAccess atom.Css.createGlobal(${css});
   }
 
-  public inline static function atomRule(name:String, value:CssValue) {
-    return create('${name}:${value};');
-  }
-
-  public static function childAtomRule(selector:String, name:String, value:String) {
-    var properties = '${name}:${value};';
-    var key = getKey(properties + selector);
-    Engine.getInstance().add(key,  '.$key $selector { $properties }');
+  public static function createAtom(css:String) {
+    var key = getKey(css);
+    Engine.getInstance().add(key, '.$key {$css}');
     return new ClassName(key);
   }
 
-  static function create(css:String) {
-    var key = getKey(css);
-    Engine.getInstance().add(key, '.$key { $css }');
+  public static function createChildAtom(selector:String, css:String) {
+    var key = getKey(css + selector);
+    Engine.getInstance().add(key, '.$key $selector {$css}');
     return new ClassName(key);
   }
 
@@ -74,7 +74,7 @@ class Css {
     return new ClassName(key);
   }
 
-  static function getKey(css:String) {
-    return '_a-${css.hash().hex()}';
+  static function getKey(css:String, prefix:String = 'a') {
+    return '_${prefix}-${css.hash().hex()}';
   }
 }

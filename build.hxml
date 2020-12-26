@@ -3,6 +3,9 @@
 
 -D debug
 -D js-es=6
+-D analyzer-optimize
+
+-dce full
 
 -main Main
 

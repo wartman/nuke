@@ -5,8 +5,10 @@ import atom.CssValue;
 import atom.CssUnit;
 
 class Main {
+  static final width:Int = 150;
+
   static function main() {
-    Css.globalRule({
+    Css.injectGlobalCss({
       body: {
         padding: 'none',
         backgroundColor: 'blue'
@@ -15,10 +17,10 @@ class Main {
         padding: Px(10)
       }
     });
-    var multiStyle = Css.rule({
+    var boxStyle = Css.rule({
       color: 'blue',
       backgroundColor: 'green',
-      width: Px(150),
+      width: Px(width),
       height: Px(130)
     });
     
@@ -39,11 +41,13 @@ class Main {
         width: Px(150),
         height: Px(130),
         backgroundColor: '#bbbbbb'
-      }) + ' ' + Css.mediaQuery({ type: Screen, minWidth: Px(900) }, 'width', Px(80));
+      }).with(
+        Css.mediaQuery({ type: Screen, minWidth: Px(900) }, 'width', Px(80))
+      );
     });
 
     var el2 = Browser.document.createDivElement();
-    el2.className = multiStyle;
+    el2.className = boxStyle;
     el2.innerHTML = '<p>Foo!</p>';
     Browser.document.body.appendChild(el2);
 
