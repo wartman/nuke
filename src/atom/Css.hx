@@ -1,5 +1,8 @@
 package atom;
 
+using atom.Hash;
+using StringTools;
+
 enum abstract MediaType(String) to String {
   var All = 'all';
   var Print = 'print';
@@ -72,6 +75,6 @@ class Css {
   }
 
   static function getKey(css:String) {
-    return '_a-${Hash.hash(css)}';
+    return '_a-${css.hash().hex()}';
   }
 }
