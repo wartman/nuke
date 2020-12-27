@@ -7,6 +7,7 @@ class StaticInjector implements Injector {
   
   public function insert(rule:CssRule, index:Int) {
     rules.push(rule);
+    return 1;
     // more?
   }
 

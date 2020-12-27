@@ -42,11 +42,17 @@ class CssBuilder {
 
   public static function generateString(selector:Null<String>, e:Expr) {
     var results = parse(e, true);
-    var decls:Array<Expr> = [];
+    var decls:Array<String> = [];
 
     function addDecl(selector:String, exprs:Array<Expr>) {
       if (exprs.length > 0) {
-        decls.push(macro $v{selector} + ' {' + [ $a{exprs} ].join('') + '}');
+        var exprStr = exprs.map(e -> switch e.expr {
+          // Because we're enfocing static values, we can be sure that
+          // only string expressions are returned.
+          case EConst(CString(s, _)): s;
+          default: throw 'assert'; 
+        });
+        decls.push('${selector} {${exprStr.join('')}}');
       } 
     }
 
@@ -69,10 +75,26 @@ class CssBuilder {
 
     addDecl(selector, generate(results, selector));
 
-    return macro @:pos(e.pos) [ $a{decls} ].join('\n'); 
+    return macro @:pos(e.pos) $v{decls.join('')}; 
   }
 
-  public static function parse(e:Expr, staticValuesOnly:Bool = false):Array<CssResult> {
+  public static function generateRule(name:String, css:Expr, pos:Position) {
+    var clsName = 'Rule${name}';
+    Context.defineType({
+      name: clsName,
+      pack: [ 'atom', 'rules' ],
+      kind: TDAbstract(macro:atom.ClassName, [], [macro:atom.ClassName]),
+      meta: [],
+      fields: (macro class {
+        @:keep public static final __RULE__ = Engine.getInstance().add($v{name}, ${css});
+        public inline function new() this = new atom.ClassName($v{name});
+      }).fields,
+      pos: pos
+    });
+    return macro new atom.rules.$clsName();
+  }
+
+  static function parse(e:Expr, staticValuesOnly:Bool = false):Array<CssResult> {
     var results:Array<CssResult> = [];
 
     switch e.expr {
@@ -89,7 +111,7 @@ class CssBuilder {
     return results;
   }
 
-  public static function parseRule(selector:String, props:Array<ObjectField>, staticValuesOnly:Bool):CssResult {
+  static function parseRule(selector:String, props:Array<ObjectField>, staticValuesOnly:Bool):CssResult {
     var results:Array<CssResult> = [];
 
     for (prop in props) switch prop.expr.expr {
@@ -102,7 +124,7 @@ class CssBuilder {
     return if (results.length == 1) results[0] else CssChildren(results);
   }
 
-  public static function parseProperty(name:String, value:Expr, staticValuesOnly:Bool):CssResult {
+  static function parseProperty(name:String, value:Expr, staticValuesOnly:Bool):CssResult {
     var key = prepareKey(name);
     return switch value.expr { 
       case EObjectDecl(fields):
@@ -115,55 +137,21 @@ class CssBuilder {
     }
   }
 
-  // @todo: this could use some cleanup.
+  // @todo: this could use A LOT OF cleanup.
   static function extractStaticValue(value:Expr):String {
-    function extract(e:Expr):String {
-      return switch e.expr {
-        case EField(a, b): 
-          extract(a) + '.' + b;
-        case EConst(CIdent(s)): 
-          s;
-        default:
-          Context.error('Invalid expression', value.pos);
-          null;
-      }
-    }
-
-    // Special case: Allow `atom.CssUnit` to be used as long as its params
-    // are static.
     if (Context.unify(Context.typeof(value), Context.getType('atom.CssUnit'))) {
-      return switch value.expr {
-        case ECall(unit, params) if (params.length > 0):
-          var value = extractStaticValue(params[0]);
-          var suffix = switch unit.expr {
-            case EConst(CIdent(s)): switch s {
-              case 'Pct': '%';
-              case 'Sec': 's';
-              case 'Num': '';
-              default: s.toLowerCase();
-            }
-            case EField(_): switch extract(unit).split('.').pop() {
-              case 'Pct': '%';
-              case 'Sec': 's';
-              case 'Num': '';
-              case s: s.toLowerCase();
-            }
-            default: throw 'assert';
+      switch value.expr {
+        case EConst(CIdent(name)):
+          var local = Context.getLocalClass().get();
+          var f = local.findField(name, true);
+          if (f != null && f.isFinal) {
+            return extractCssUnitValue(Context.getTypedExpr(f.expr()));
+          } else {
+            Context.error('A static value is requried', value.pos);
           }
-          value + suffix;
-        case ECall(unit, _):
-          switch unit.expr {
-            case EConst(CIdent('Auto')): 'auto';
-            case EConst(CIdent('None')): '0';
-            case EField(_): switch extract(unit).split('.').pop() {
-              case 'Auto': 'auto';
-              case 'None': '0';
-              default: throw 'assert';
-            }
-            default: throw 'assert';
-          }
-        default:
-          ''; 
+        case EField(a, b):
+          return extractCssUnitValue(Context.getTypedExpr(getField(a, b, value.pos).expr()));
+        default: return extractCssUnitValue(value);
       }
     }
 
@@ -184,30 +172,80 @@ class CssBuilder {
       case EConst(CString(s, _)): s;
       case EConst(CInt(s)): Std.string(s);
       case EConst(CFloat(s)): Std.string(s);
-      case EField(a, b): // todo: pull this out?
-        var typeName = extract(a);
-        if (typeName.indexOf('.') < 0) {
-          typeName = getTypePath(typeName, Context.getLocalImports());
-        }
-        var type = try {
-          Context.getType(typeName).getClass();
-        } catch (e:String) {
-          Context.error('The type ${typeName} was not found', value.pos);
-        }
-        var f = type.findField(b, true);
-        if (f == null) {
-          Context.error('The field ${typeName}.${b} does not exist', value.pos);
-        }
-        if (!f.isFinal) {
-          Context.error('Fields must be static and final', value.pos);
-        }
-        switch f.expr().expr {
-          case TConst(TString(s)): s;
-          case TConst(TInt(s)): Std.string(s);
-          default: Context.error('A static value is requried', value.pos);
-        }
+      case EField(a, b): switch getField(a, b, value.pos).expr().expr {
+        case TConst(TString(s)): s;
+        case TConst(TInt(s)): Std.string(s);
+        case TConst(TFloat(s)): Std.string(s);
+        default: Context.error('A static value is requried', value.pos);
+      }
       default: Context.error('A static value is requried', value.pos);
     }
+  }
+
+  static function getTypePathFromExpr(e:Expr, pos):String {
+    return switch e.expr {
+      case EField(a, b): 
+        getTypePathFromExpr(a, pos) + '.' + b;
+      case EConst(CIdent(s)): 
+        s;
+      default:
+        Context.error('Invalid expression', pos);
+        null;
+    }
+  }
+
+  static function getField(a:Expr, name:String, pos) {
+    var typeName = getTypePathFromExpr(a, pos);
+    if (typeName.indexOf('.') < 0) {
+      typeName = getTypePath(typeName, Context.getLocalImports());
+    }
+    var type = try {
+      Context.getType(typeName).getClass();
+    } catch (e:String) {
+      Context.error('The type ${typeName} was not found', pos);
+    }
+    var f = type.findField(name, true);
+    if (f == null) {
+      Context.error('The field ${typeName}.${name} does not exist', pos);
+    }
+    if (!f.isFinal) {
+      Context.error('Fields must be static and final', pos);
+    }
+    return f;
+  }
+  
+  static function extractCssUnitValue(value:Expr) return switch value.expr {
+    case ECall(unit, params) if (params.length > 0):
+      var str = extractStaticValue(params[0]);
+      var suffix = switch unit.expr {
+        case EConst(CIdent(s)): switch s {
+          case 'Pct': '%';
+          case 'Sec': 's';
+          case 'Num': '';
+          default: s.toLowerCase();
+        }
+        case EField(_): switch getTypePathFromExpr(unit, value.pos).split('.').pop() {
+          case 'Pct': '%';
+          case 'Sec': 's';
+          case 'Num': '';
+          case s: s.toLowerCase();
+        }
+        default: throw 'assert';
+      }
+      str + suffix;
+    case ECall(unit, _):
+      switch unit.expr {
+        case EConst(CIdent('Auto')): 'auto';
+        case EConst(CIdent('None')): '0';
+        case EField(_): switch getTypePathFromExpr(unit, value.pos).split('.').pop() {
+          case 'Auto': 'auto';
+          case 'None': '0';
+          default: throw 'assert';
+        }
+        default: throw 'assert';
+      }
+    default:
+      ''; 
   }
 
   static function getTypePath(name:String, imports:Array<ImportExpr>):String {

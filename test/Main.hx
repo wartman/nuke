@@ -5,7 +5,7 @@ import atom.CssValue;
 import atom.CssUnit;
 
 class Main {
-  static final width:Int = 150;
+  static final width = atom.CssUnit.Px(150);
 
   static function main() {
     Css.injectGlobalCss({
@@ -20,7 +20,7 @@ class Main {
     var boxStyle = Css.rule({
       color: 'blue',
       backgroundColor: 'green',
-      width: atom.CssUnit.Px(width),
+      width: width,
       height: Px(130)
     });
     

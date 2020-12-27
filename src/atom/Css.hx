@@ -23,14 +23,12 @@ class Css {
   }
   
   public static macro function rule(e) {
+    // todo: move this all into CssBuilder?
     var name = haxe.macro.TypeTools.toString(haxe.macro.Context.getLocalType());
     var min = haxe.macro.PositionTools.getInfos(e.pos).min;
     var sel = getKey(name + min, 'css');
     var css = atom.CssBuilder.generateString('.' + sel, e);
-    return macro {
-      Engine.getInstance().add($v{sel}, ${css});
-      new atom.ClassName($v{sel});
-    }
+    return atom.CssBuilder.generateRule(sel, css, e.pos);
   }
 
   public static macro function injectGlobalCss(e) {
@@ -52,7 +50,7 @@ class Css {
 
   static function createGlobal(css:String) {
     var key = getKey(css);
-    Engine.getInstance().add(key, '@media all { $css }');
+    Engine.getInstance().add(key, '@media all {$css}');
     return new ClassName(key);
   }
   
@@ -75,6 +73,6 @@ class Css {
   }
 
   static function getKey(css:String, prefix:String = 'a') {
-    return '_${prefix}-${css.hash().hex()}';
+    return '_${prefix}${css.hash().hex()}';
   }
 }

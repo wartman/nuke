@@ -19,6 +19,7 @@ class DomInjector implements Injector {
       Browser.document.createTextNode(rule),
       el.childNodes[index]
     );
+    return 1;
   }
 
   public function toString() {

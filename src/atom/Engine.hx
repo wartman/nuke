@@ -25,11 +25,13 @@ class Engine {
     this.injector = injector;
   }
 
-  public function add(key:String, rule:String) {
+  public function add(key:String, rule:String):Int {
     if (!ruleIndexes.contains(key)) {
-      injector.insert(rule, ruleIndexes.length);
+      var ret = injector.insert(rule, ruleIndexes.length);
       ruleIndexes.push(key);
+      return ret;
     }
+    return 0;
   }
 
   public function stylesToString() {

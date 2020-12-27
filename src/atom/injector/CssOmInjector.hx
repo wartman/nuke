@@ -10,9 +10,9 @@ class CssOmInjector implements Injector {
   }
 
   public function insert(rule:CssRule, index:Int) {
-    try {
+    return try {
       sheet.insertRule(rule, index);
-    }
+    } catch (e) -1;
   }
 
   public function toString() {
