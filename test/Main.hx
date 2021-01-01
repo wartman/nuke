@@ -21,7 +21,10 @@ class Main {
       color: 'blue',
       backgroundColor: 'green',
       width: width,
-      height: Px(130)
+      height: Px(130),
+      '@media screen and (min-width: 50px)': {
+        width: Px(20)
+      }
     });
     
     var el = Browser.document.createDivElement();
@@ -30,6 +33,9 @@ class Main {
       width: Px(150),
       height: Px(130),
       backgroundColor: '#cccccc',
+      ':hover': {
+        backgroundColor: '#555555',
+      },
       p: {
         padding: [ Px(50), Px(20) ],
         color: 'red'

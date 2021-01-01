@@ -17,13 +17,19 @@ typedef MediaQueryOptions = {
   // etc
 }
 
+enum SelectorType {
+  SelChild(selector:String);
+  SelPsuedo(psuedo:String);
+  SelAtRule(rule:String, ?selector:String);
+}
+
 class Css {
   public static macro function atoms(e) {
     return atom.CssBuilder.generateAtoms(e);
   }
   
   public static macro function rule(e) {
-    // todo: move this all into CssBuilder?
+    // @todo: move this all into CssBuilder?
     var name = haxe.macro.TypeTools.toString(haxe.macro.Context.getLocalType());
     var min = haxe.macro.PositionTools.getInfos(e.pos).min;
     var sel = getKey(name + min, 'css');
@@ -42,9 +48,25 @@ class Css {
     return new ClassName(key);
   }
 
-  public static function createChildAtom(selector:String, css:String) {
+  public static function createChildAtom(selector:SelectorType, css:String) {
     var key = getKey(css + selector);
-    Engine.getInstance().add(key, '.$key $selector {$css}');
+    trace(css + selector);
+
+    switch selector {
+      case SelChild(selector) if (selector.startsWith(':')): // bit of a hack
+        Engine.getInstance().add(key, '.$key$selector {$css}');
+      case SelChild(selector):
+        Engine.getInstance().add(key, '.$key $selector {$css}');
+      case SelPsuedo(psuedo):
+        Engine.getInstance().add(key, '.$key$psuedo {$css}');
+      case SelAtRule(r, null):
+        Engine.getInstance().add(key, '$r { .$key {$css} }');
+      case SelAtRule(r, sel) if (sel.startsWith(':')): // bit of a hack
+        Engine.getInstance().add(key, '$r { .$key$sel {$css} }');
+      case SelAtRule(r, sel):
+        Engine.getInstance().add(key, '$r { .$key $sel {$css} }');
+    }
+    
     return new ClassName(key);
   }
 
@@ -65,11 +87,8 @@ class Css {
 
     var properties = '${name}:${value};';
     var query = selector.join(' and ');
-    var key = getKey(properties + query);
-
-    Engine.getInstance().add(key, '@media $query { .$key { $properties } }');
-
-    return new ClassName(key);
+  
+    return createChildAtom(SelAtRule('@media $query'), properties);
   }
 
   static function getKey(css:String, prefix:String = 'a') {
