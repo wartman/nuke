@@ -50,7 +50,6 @@ class Css {
 
   public static function createChildAtom(selector:SelectorType, css:String) {
     var key = getKey(css + selector);
-    trace(css + selector);
 
     switch selector {
       case SelChild(selector) if (selector.startsWith(':')): // bit of a hack

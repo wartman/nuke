@@ -18,6 +18,16 @@ class Engine {
     return instance;
   }
 
+  /**
+    Set the Engine instance Atom will use. The previous instance,
+    if any, will be returned.
+  **/
+  public static function setInstance(engine:Engine) {
+    var previousInstance = instance;
+    instance = engine;
+    return previousInstance;
+  }
+
   final injector:Injector;
   final ruleIndexes:Array<String> = [];
 

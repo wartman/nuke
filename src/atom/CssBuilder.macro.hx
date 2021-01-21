@@ -65,9 +65,9 @@ class CssBuilder {
       } 
     }
 
-    function addAtRule(rule:String, selector:String, exprs:Array<Expr>) {
+    function addAtRule(rule:String, exprs:Array<String>) {
       if (exprs.length > 0) {
-        decls.push('${rule} { ${selector} {${exprs.map(getString).join('')}} }');
+        decls.push('${rule} { ${exprs.join('')} }');
       } 
     }
 
@@ -92,8 +92,13 @@ class CssBuilder {
           var sel = selector + wrapper;
           addRule(sel, generate(children, sel));
         case CssWrapper(wrapper, children):
-          // todo: handle special cases like @font-face and @keyframes
-          addAtRule(wrapper, selector, generate(children, selector));
+          var lastDecls = decls;
+          decls = [];
+          var exprs = generate(children, selector);
+          if (selector != null && exprs.length > 0) addRule(selector, exprs);
+          var wrappedDecls = decls;
+          decls = lastDecls;
+          addAtRule(wrapper, wrappedDecls);
         case CssAtom(expr):
           exprs.push(expr);
       } 
