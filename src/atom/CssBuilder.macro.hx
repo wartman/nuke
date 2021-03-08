@@ -139,6 +139,7 @@ class CssBuilder {
         // `type` needs to be first
         fields.sort((a, b) -> {
           if (a.field == 'type') -1;
+          else if (b.field == 'type') 1;
           else 0;
         });
         
