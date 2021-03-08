@@ -5,6 +5,8 @@ import haxe.macro.Expr;
 import atom.CssParser;
 
 using StringTools;
+using haxe.macro.TypeTools;
+using haxe.macro.PositionTools;
 
 class CssBuilder {
   public static function generateAtoms(e:Expr) {
@@ -124,5 +126,45 @@ class CssBuilder {
       pos: pos
     });
     return macro atom.rules.$clsName.__NAME;
+  }
+  
+  public static function generateMediaQuery(query:Expr):String {
+    return switch query.expr {
+      case EConst(CString(s, _)): 
+        '@media $s'; // Todo: handle interpolation?
+      
+      case EObjectDecl(fields):
+        var selector:Array<String> = [];
+
+        // `type` needs to be first
+        fields.sort((a, b) -> {
+          if (a.field == 'type') -1;
+          else 0;
+        });
+        
+        for (f in fields) switch f.field {
+          case 'type': switch f.expr.expr {
+            case EConst(CString(s, _)): 
+              selector.push(s);
+            default:
+              Context.error('Expected a string', f.expr.pos);
+          }
+          default:
+            var name = CssParser.generateCssPropertyName(f.field);
+            var value = CssParser.extractStaticValue(f.expr);
+            selector.push('(${name}: ${value})');
+        }
+
+        '@media ' + selector.join(' and ');
+      default:
+        Context.error('Expected a string or a query object', query.pos);
+        '';
+    }
+  }
+
+  public static function generatePositionBasedId(e:Expr) {
+    var name = Context.getLocalType().toString();
+    var min = e.pos.getInfos().min;
+    return name + min;
   }
 }

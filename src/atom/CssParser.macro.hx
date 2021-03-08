@@ -80,7 +80,7 @@ class CssParser {
     }, pos: e.pos };
   }
 
-  static function generateCssPropertyName(key:String) {
+  public static function generateCssPropertyName(key:String) {
     return [ for (i in 0...key.length)
       if (ucase.match(key.charAt(i))) {
         if (i == 0)
@@ -94,7 +94,7 @@ class CssParser {
   }
   
   // @todo: this could use A LOT OF cleanup.
-  static function extractStaticValue(value:Expr):String {
+  public static function extractStaticValue(value:Expr):String {
     if (Context.unify(Context.typeof(value), Context.getType('atom.CssUnit'))) {
       switch value.expr {
         case EConst(CIdent('Auto')): return 'auto';

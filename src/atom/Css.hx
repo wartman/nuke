@@ -3,20 +3,6 @@ package atom;
 using atom.Hash;
 using StringTools;
 
-enum abstract MediaType(String) to String {
-  var All = 'all';
-  var Print = 'print';
-  var Screen = 'screen';
-  var Speech = 'speech';
-}
-
-typedef MediaQueryOptions = {
-  @:optional public final type:MediaType;
-  @:optional public final maxWidth:CssUnit;
-  @:optional public final minWidth:CssUnit;
-  // etc
-}
-
 enum SelectorType {
   SelChild(selector:String);
   SelPsuedo(psuedo:String);
@@ -25,21 +11,40 @@ enum SelectorType {
 
 class Css {
   public static macro function atoms(e) {
-    return atom.CssBuilder.generateAtoms(e);
+    return CssBuilder.generateAtoms(e);
   }
   
   public static macro function rule(e) {
-    // @todo: move this all into CssBuilder?
-    var name = haxe.macro.TypeTools.toString(haxe.macro.Context.getLocalType());
-    var min = haxe.macro.PositionTools.getInfos(e.pos).min;
-    var sel = getKey(name + min, 'css');
-    var css = atom.CssBuilder.generateString('.' + sel, e);
-    return atom.CssBuilder.generateRule(sel, css, e.pos);
+    var sel = getKey(CssBuilder.generatePositionBasedId(e), 'css');
+    var css = CssBuilder.generateString('.' + sel, e);
+    return CssBuilder.generateRule(sel, css, e.pos);
   }
 
   public static macro function injectGlobalCss(e) {
-    var css = atom.CssBuilder.generateString(null, e);
+    var css = CssBuilder.generateString(null, e);
     return macro @:privateAccess atom.Css.createGlobal(${css});
+  }
+
+  public static macro function mediaQueryAtoms(query, e) {
+    var query = CssBuilder.generateMediaQuery(query);
+    return CssBuilder.generateAtoms({
+      expr: EObjectDecl([
+        { field: query, expr: e }
+      ]),
+      pos: e.pos
+    });
+  }
+
+  public static macro function mediaQueryRule(query, e) {
+    var query = CssBuilder.generateMediaQuery(query);
+    var sel = getKey(CssBuilder.generatePositionBasedId(e), 'css');
+    var css = CssBuilder.generateString('.' + sel, {
+      expr: EObjectDecl([
+        { field: query, expr: e }
+      ]),
+      pos: e.pos
+    });
+    return CssBuilder.generateRule(sel, css, e.pos);
   }
 
   public static function createAtom(css:String) {
@@ -73,21 +78,6 @@ class Css {
     var key = getKey(css);
     Engine.getInstance().add(key, '@media all {$css}');
     return new ClassName(key);
-  }
-  
-  public static function mediaQuery(options:MediaQueryOptions, name:String, value:CssValue) {
-    var selector:Array<String> = [];
-    if (options.type != null) 
-      selector.push(options.type);
-    if (options.maxWidth != null) 
-      selector.push('(max-width: ${options.maxWidth.toString()})');
-    if (options.minWidth != null) 
-      selector.push('(min-width: ${options.minWidth.toString()})');
-
-    var properties = '${name}:${value};';
-    var query = selector.join(' and ');
-  
-    return createChildAtom(SelAtRule('@media $query'), properties);
   }
 
   static function getKey(css:String, prefix:String = 'a') {

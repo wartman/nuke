@@ -48,7 +48,10 @@ class Main {
         height: Px(130),
         backgroundColor: '#bbbbbb'
       }).with(
-        Css.mediaQuery({ type: Screen, minWidth: Px(900) }, 'width', Px(80))
+        Css.mediaQueryAtoms({ 
+          minWidth: Px(900), 
+          type: 'screen'
+        }, { width: Px(80) })
       );
     });
 
