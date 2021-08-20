@@ -1,0 +1,10 @@
+-cp src
+-cp test
+
+-lib medic
+
+-main Run
+
+-js dist/test/index.js
+
+-cmd node dist/test/index.js

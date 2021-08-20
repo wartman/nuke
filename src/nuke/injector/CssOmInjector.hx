@@ -1,15 +1,15 @@
-package atom.injector;
+package nuke.injector;
 
 import js.html.CSSStyleSheet;
 
 class CssOmInjector implements Injector {
-  final sheet:CSSStyleSheet;
+  public final sheet:CSSStyleSheet;
 
   public function new(?sheet) {
     this.sheet = if (sheet != null) sheet else cast Tools.getStyleEl().sheet;
   }
 
-  public function insert(rule:CssRule, index:Int) {
+  public function insert(rule:String, index:Int) {
     return try {
       sheet.insertRule(rule, index);
     } catch (e) -1;

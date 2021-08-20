@@ -1,10 +1,10 @@
-package atom;
+package nuke.injector;
 
 import js.Browser.document;
 import js.html.StyleElement;
 
 class Tools {
-  static final styleId:String = '__atom__';
+  static final styleId:String = '__nuke__';
 
   public static function getStyleEl():StyleElement {
     return switch document.getElementById(styleId) {

@@ -1,6 +1,7 @@
-package atom.injector;
+package nuke.injector;
 
 import js.Browser;
+import js.html.CSSStyleSheet;
 import js.html.StyleElement;
 
 /**
@@ -9,12 +10,14 @@ import js.html.StyleElement;
 **/
 class DomInjector implements Injector {
   final el:StyleElement;
+  public final sheet:CSSStyleSheet;
 
   public function new(?el) {
     this.el = if (el != null) el else Tools.getStyleEl();
+    sheet = cast this.el.sheet;
   }
  
-  public function insert(rule:CssRule, index:Int) {
+  public function insert(rule:String, index:Int) {
     el.insertBefore(
       Browser.document.createTextNode(rule),
       el.childNodes[index]

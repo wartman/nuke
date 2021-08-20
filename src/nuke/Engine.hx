@@ -1,6 +1,6 @@
-package atom;
+package nuke;
 
-import atom.injector.*;
+import nuke.injector.*;
 
 class Engine {
   static var instance:Engine = null;
@@ -17,7 +17,7 @@ class Engine {
     }
     return instance;
   }
-
+  
   /**
     Set the Engine instance Atom will use. The previous instance,
     if any, will be returned.
@@ -27,7 +27,7 @@ class Engine {
     instance = engine;
     return previousInstance;
   }
-
+  
   final injector:Injector;
   final ruleIndexes:Array<String> = [];
 
@@ -35,9 +35,10 @@ class Engine {
     this.injector = injector;
   }
 
-  public function add(key:String, rule:String):Int {
+  public function add(atom:Atom):Int {
+    var key = atom.getHash();
     if (!ruleIndexes.contains(key)) {
-      var ret = injector.insert(rule, ruleIndexes.length);
+      var ret = injector.insert(atom.render(), ruleIndexes.length);
       ruleIndexes.push(key);
       return ret;
     }

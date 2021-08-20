@@ -1,4 +1,4 @@
-package atom;
+package nuke;
 
 using StringTools;
 
@@ -7,20 +7,24 @@ abstract ClassName(String) to String {
     return if (s == null) null else new ClassName(s.trim());
   }
 
-  @:from static function ofMap(parts:Map<String, Bool>) {
+  @:from public static function ofMap(parts:Map<String, Bool>) {
     return ofArray([ 
       for (name => isValid in parts) if (isValid) ofString(name)
     ]);
   }
 
-  @:from static function ofDynamicAccess(parts:haxe.DynamicAccess<Bool>) {
+  @:from public static function ofDynamicAccess(parts:haxe.DynamicAccess<Bool>) {
     return ofArray([
       for (name => isValid in parts) if (isValid) ofString(name)
     ]);
   }
 
-  @:from static function ofArray(parts:Array<String>) {
+  @:from public static function ofArray(parts:Array<String>) {
     return new ClassName(parts.map(ofString).join(' '));
+  }
+
+  @:from public static function ofAtoms(parts:Array<Atom>) {
+    return new ClassName(parts.map(a -> a.getClassName()).join(' '));
   }
 
   inline public function new(s:String) {

@@ -4,9 +4,10 @@
 -D debug
 -D js-es=6
 -D analyzer-optimize
+-D nuke.output=styles 
 
 -dce full
 
--main Main
+-main Nuke
 
 -js dist/test.js
