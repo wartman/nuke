@@ -8,6 +8,6 @@
 
 -dce full
 
--main Nuke
+-main Test
 
 -js dist/test.js
