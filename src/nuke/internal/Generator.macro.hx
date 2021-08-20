@@ -57,6 +57,21 @@ function generateMediaQuery(query:Expr):String {
 
 private function generateAtom(expr:CssExpr, ?parent:String, ?atRule:String):Array<Expr> {
   var exprs:Array<Expr> = [];
+  
+  function wrap(expr:Expr) {
+    if (parent != null) {
+      expr = macro nuke.Atom.createWrappedAtom($v{parent}, ${expr});
+    }
+    if (atRule != null) {
+      expr = macro nuke.Atom.createAtRuleAtom($v{atRule}, ${expr});
+    }
+    return macro {
+      var atom = $expr;
+      nuke.Engine.getInstance().add(atom);
+      atom;
+    };
+  }
+
   switch expr.expr {
     case CssChildren(children):
       exprs = exprs.concat(generate(children, parent, atRule));
@@ -79,16 +94,6 @@ private function generateAtom(expr:CssExpr, ?parent:String, ?atRule:String):Arra
     case CssRule(selector, children):
       exprs = exprs.concat(generate(children, parent != null ? parent + ' ' + selector : ' ' + selector ));
     case CssAtom(property, value):
-      function wrap(expr:Expr) {
-        if (parent != null) {
-          expr = macro nuke.Atom.createWrappedAtom($v{parent}, ${expr});
-        }
-        if (atRule != null) {
-          expr = macro nuke.Atom.createAtRuleAtom($v{atRule}, ${expr});
-        }
-        return expr;
-      }
-
       var expr = switch extractStaticValue(value) {
         case Some(value):
           var css = '${property}:${value}';
@@ -101,6 +106,7 @@ private function generateAtom(expr:CssExpr, ?parent:String, ?atRule:String):Arra
             if (atRule != null) {
               atom = Atom.createAtRuleAtom(atRule, atom);
             }
+            Engine.getInstance().add(atom);
             macro @:pos(expr.pos) nuke.Atom.createPrerenderedAtom($v{atom.getClassName()});
           } else {
             wrap(macro @:pos(expr.pos) nuke.Atom.createStaticAtom($v{className}, $v{css}));
@@ -115,13 +121,7 @@ private function generateAtom(expr:CssExpr, ?parent:String, ?atRule:String):Arra
         case Some(css):
           var className = hash(css).withPrefix();
           var expr = macro @:pos(expr.pos) nuke.Atom.createStaticAtom($v{className}, $v{css});
-          if (parent != null) {
-            expr = macro nuke.Atom.createWrappedAtom($v{parent}, ${expr});
-          }
-          if (atRule != null) {
-            expr = macro nuke.Atom.createAtRuleAtom($v{atRule}, ${expr});
-          }
-          exprs.push(expr);
+          exprs.push(wrap(expr));
         case None:
           Context.error('Raw strings can only contain static values', expr.pos);
       }

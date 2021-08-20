@@ -29,19 +29,6 @@ abstract Atom(AtomType) from AtomType {
 
   public inline function new(atom) {
     this = atom;
-    switch this {
-      case AtomPrerendered(_):
-        // noop
-      default:
-        Engine.getInstance().add(this);
-    }
-  }
-
-  public function shouldRegister() {
-    return switch this {
-      case AtomPrerendered(_): false;
-      default: true;
-    }
   }
 
   public function getHash():String {
