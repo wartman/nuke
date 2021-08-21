@@ -11,7 +11,7 @@ abstract Atom(AtomType) from AtomType {
     return new Atom(AtomPrerendered(className));
   }
 
-  public inline static function createAtom(property:String, value:String) {
+  public inline static function createAtom(property:String, value:Value) {
     return new Atom(AtomDynamic(property, value));
   }
 

@@ -1,52 +1,52 @@
 package nuke;
 
 class UnitTools {
-  public inline static function px(value:Float) {
-    return '${value}px';
+  public macro static function px(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, 'px');
   }
 
-  public inline static function pct(value:Float) {
-    return '${value}%';
+  public macro static function pct(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, '%');
   }
 
-  public inline static function em(value:Float) {
-    return '${value}em';
+  public macro static function em(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, 'em');
   }
 
-  public inline static function rem(value:Float) {
-    return '${value}rem';
+  public macro static function rem(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, 'rem');
   }
 
-  public inline static function vh(value:Float) {
-    return '${value}vh';
+  public macro static function vh(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, 'vh');
   }
 
-  public inline static function vw(value:Float) {
-    return '${value}vw';
+  public macro static function vw(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, 'vw');
   }
 
-  public inline static function vMin(value:Float) {
-    return '${value}vmin';
+  public macro static function vMin(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, 'vmin');
   }
 
-  public inline static function vMax(value:Float) {
-    return '${value}vmax';
+  public macro static function vMax(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, 'vmax');
   }
 
-  public inline static function deg(value:Float) {
-    return '${value}deg';
+  public macro static function deg(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, 'deg');
   }
 
-  public inline static function sec(value:Float) {
-    return '${value}s';
+  public macro static function sec(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, 's');
   }
 
-  public inline static function ms(value:Float) {
-    return '${value}ms';
+  public macro static function ms(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, 'ms');
   }
 
-  public inline static function fr(value:Float) {
-    return '${value}fr';
+  public macro static function fr(value:haxe.macro.Expr.ExprOf<Float>) {
+    return nuke.internal.UnitGenerator.generateUnit(value, 'fr');
   }
 
   public inline static function add(a:String, b:String) {

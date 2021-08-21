@@ -13,4 +13,19 @@ It's main benefit is that it uses Haxe's macro system to automatically check if 
 Usage
 -----
 
-> Todo
+Nuke's API is simple, consisting of a few methods. Most of the complicated stuff happens behind the scenes.
+
+To get stated, import Nuke with `using Nuke` at the top of the file. This will expose the `Css` Api, some special extension methods to convert Floats and Ints into CSS units, and `ClassName`.
+
+```haxe
+using Nuke;
+
+function main() {
+  var classOne:ClassName = Css.atoms({
+    width: 20.px(),
+    height: 20.px() + 20.px() // will be converted into `calc(20px + 20px)`
+  });
+}
+```
+
+> todo: more to come

@@ -29,9 +29,9 @@ class Test {
     var boxStyle = Css.atoms({
       color: 'blue',
       backgroundColor: 'green',
-      height: '130px'.add(50.pct()),
+      height: 130.px() + 50.pct(),
       '@media screen and (min-width: 50px)': {
-        width: '20px'
+        width: 20.px()
       }
     });
     
@@ -45,7 +45,7 @@ class Test {
         backgroundColor: '#555555',
       },
       p: {
-        padding:'50px 20px',
+        padding: [ '50px', '20px' ],
         color: 'red'
       }
     });

@@ -6,6 +6,6 @@ enum AtomType {
   AtomChild(selector:String, atom:Atom);
   AtomAtRule(atRule:String, atom:Atom);
   AtomStatic(className:String, css:String);
-  AtomDynamic(prop:String, value:String);
+  AtomDynamic(prop:String, value:Value);
   AtomPrerendered(className:String);
 }
