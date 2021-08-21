@@ -31,6 +31,18 @@ abstract Atom(AtomType) from AtomType {
     this = atom;
   }
 
+  /**
+    Inject the atom into the current engine.
+
+    This *must* be called if you want the atom to work -- if you're
+    using the `nuke.Css.atoms(...)` api this will be handled automatically,
+    but be aware of it if you're manually creating Atoms.
+  **/
+  public inline function inject() {
+    Engine.getInstance().add(this);
+    return this;
+  }
+
   public function getHash():String {
     return switch this {
       case AtomChild(selector, atom) | AtomAtRule(selector, atom): 

@@ -65,11 +65,7 @@ private function generateAtom(expr:CssExpr, ?parent:String, ?atRule:String):Arra
     if (atRule != null) {
       expr = macro nuke.Atom.createAtRuleAtom($v{atRule}, ${expr});
     }
-    return macro {
-      var atom = $expr;
-      nuke.Engine.getInstance().add(atom);
-      atom;
-    };
+    return macro $expr.inject();
   }
 
   switch expr.expr {
@@ -106,7 +102,7 @@ private function generateAtom(expr:CssExpr, ?parent:String, ?atRule:String):Arra
             if (atRule != null) {
               atom = Atom.createAtRuleAtom(atRule, atom);
             }
-            Engine.getInstance().add(atom);
+            atom.inject();
             macro @:pos(expr.pos) nuke.Atom.createPrerenderedAtom($v{atom.getClassName()});
           } else {
             wrap(macro @:pos(expr.pos) nuke.Atom.createStaticAtom($v{className}, $v{css}));
