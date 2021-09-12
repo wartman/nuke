@@ -45,6 +45,15 @@ class Engine {
     return 0;
   }
 
+  public function addRawCss(key:String, css:String) {
+    if (!ruleIndexes.contains(key)) {
+      var ret = injector.insert(css, ruleIndexes.length);
+      ruleIndexes.push(key);
+      return ret;
+    }
+    return 0;
+  }
+
   public function stylesToString() {
     return injector.toString();
   }

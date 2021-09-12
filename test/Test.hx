@@ -6,23 +6,14 @@ class Test {
   static var width = 150.px();
 
   static function main() {
-    // Css.injectGlobalCss({
-    //   body: {
-    //     padding: 'none',
-    //     backgroundColor: 'blue'
-    //   },
-    //   div: {
-    //     padding: '10px'
-    //   }
-    // });
-
-    // Instead of injectGlobalCss, we're trying this:
-    Browser.document.body.className = Css.atoms({
-      padding: 'none',
-      backgroundColor: 'blue',
+    Css.global({
+      body: {
+        padding: 'none',
+        backgroundColor: 'blue',
+        font: list('"Helvetica"', 'sans-serif')
+      },
       div: {
-        padding: 10.px(),
-        margin: 0
+        padding: '10px'
       }
     });
 

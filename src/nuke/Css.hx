@@ -17,6 +17,11 @@ class Css {
     return createAtoms(e);
   }
 
+  public static macro function global(e) {
+    var exprs = parse(e);
+    return nuke.internal.Generator.generateRawCss(exprs);
+  }
+
   public static macro function mediaQuery(query, e) {
     var mediaQuery = nuke.internal.Generator.generateMediaQuery(query);
     return createAtoms({

@@ -1,5 +1,6 @@
 package nuke.internal;
 
+import nuke.internal.StaticExtractor.mergeList;
 import haxe.ds.Option;
 import haxe.macro.Context;
 import haxe.macro.Expr;
@@ -13,6 +14,59 @@ using nuke.internal.Prefix;
 
 function generate(exprs:Array<CssExpr>, ?parent:String, ?atRule:String):Array<Expr> {
   return exprs.map(expr -> generateAtom(expr, parent, atRule)).flatten();
+}
+
+function generateRawCss(exprs:Array<CssExpr>):Expr {
+  var css = generateRawCssExprs(exprs);
+  var key = nuke.internal.Hash.hash(css); // todo: will this be slow?
+  if (CssExporter.shouldExport()) {
+    Engine.getInstance().addRawCss(key, css);
+    return macro 0;
+  }
+  return macro nuke.Engine.getInstance().addRawCss($v{key}, $v{css});
+}
+
+private function generateRawCssExprs(exprs:Array<CssExpr>, ?parent:String, ?atRule:String):String {
+  var out:Array<String> = [];
+  function generateRawCssExpr(expr:CssExpr) switch expr.expr {
+    case CssRule(selector, children):
+      out.push(generateRawCssExprs(children, selector, atRule));
+    case CssChildren(children):
+      out.push(generateRawCssExprs(children, null, atRule));
+    case CssWrapper(wrapper, children) if (wrapper.contains('&')):
+      if (parent == null) {
+        Context.error('Rules with "&" require a parent', expr.pos);
+      }
+      out.push(generateRawCssExprs(children, wrapper.replace('&', parent), atRule));
+    case CssWrapper(wrapper, children) if (wrapper.startsWith(':')):
+      out.push(generateRawCssExprs(children, parent != null ? parent + wrapper : wrapper, atRule));
+    case CssWrapper(wrapper, children):
+      // todo: handle special cases like @font-face and @keyframes
+      if (atRule != null) {
+        Context.error('At-rules cannot be nested', expr.pos);
+      }
+      if (wrapper.startsWith('@')) {
+        wrapper = wrapper.substr(1);
+      }
+      out.push(generateRawCssExprs(children, parent, wrapper));
+    case CssAtom(property, value):
+      if (parent == null) {
+        Context.error('Atoms require parents when generating raw css', expr.pos);
+      }
+      value = prepareValue(value);
+      switch extractStaticValue(value) {
+        case Some(value):
+          var rule = '$parent{$property:$value}';
+          if (atRule != null) rule = '@$atRule {$rule}';
+          out.push(rule);
+        case None:
+          Context.error('Only static values are allowed in raw css', expr.pos);
+      }
+    case CssRaw(css):
+      Context.error('Raw strings are not allowed when creating raw css', expr.pos);
+  }
+  for (expr in exprs) generateRawCssExpr(expr);
+  return out.join(' ');
 }
 
 function generateMediaQuery(query:Expr):String {
@@ -89,6 +143,7 @@ private function generateAtom(expr:CssExpr, ?parent:String, ?atRule:String):Arra
     case CssRule(selector, children):
       exprs = exprs.concat(generate(children, parent != null ? parent + ' ' + selector : ' ' + selector ));
     case CssAtom(property, value):
+      value = prepareValue(value);
       var expr = switch extractStaticValue(value) {
         case Some(value):
           var css = '${property}:${value}';
@@ -122,4 +177,34 @@ private function generateAtom(expr:CssExpr, ?parent:String, ?atRule:String):Arra
       }
   }
   return exprs;
+}
+
+private function prepareValue(expr:Expr):Expr {
+  return switch expr.expr {
+    case EArrayDecl(values):
+      return {
+        expr: EArrayDecl(values.map(prepareValue)),
+        pos: expr.pos
+      };
+    case ECall(e, params): 
+      switch e.expr {
+        case EConst(CIdent(name)): switch name {
+          case 'list': switch mergeList(params, ',') {
+            case Some(v):
+              macro $v{v};
+            case None: 
+              macro [ $a{params} ].join(',');
+          }
+          default: switch mergeList(params, ',') {
+            case Some(v): 
+              var str = name + '(' + v + ')';
+              return macro $v{v};
+            case None: 
+              macro $v{name} + '(' + [ $a{params} ].join(',') + ')';
+          }
+        }
+        default: expr;
+      }
+    default: expr;
+  }
 }

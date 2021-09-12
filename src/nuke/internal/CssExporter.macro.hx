@@ -11,7 +11,7 @@ class CssExporter {
   static var isInitialized:Bool = false;
 
   public static function shouldExport() {
-    if (Context.defined('nuke.output')) {
+    if (Context.defined('nuke.output') || Context.defined('nuke.ignore')) {
       requestExport();
       return true;
     }
@@ -21,10 +21,11 @@ class CssExporter {
   static function requestExport() {
     if (!isInitialized) {
       isInitialized = true;
-      Engine.setInstance(new Engine(new StaticInjector()));
-      Context.onAfterGenerate(() -> {
-        File.saveContent(getFilename(), Engine.getInstance().stylesToString());
-      });
+      if (!Context.defined('nuke.ignore')) {
+        Context.onAfterGenerate(() -> {
+          File.saveContent(getFilename(), Engine.getInstance().stylesToString());
+        });
+      }
     }
   }
 

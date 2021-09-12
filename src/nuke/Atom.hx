@@ -75,7 +75,7 @@ abstract Atom(AtomType) from AtomType {
       case AtomChild(selector, atom):
         '.' + getHash() + selector + ' {${atom.toCss()}}';
       case AtomAtRule(atRule, atom):
-        '@$atRule { ${atom.render()} }';
+        '@$atRule { .${getHash()} {${atom.toCss()}} }';
       case AtomStatic(className, css):
         '.$className {$css}';
       case AtomDynamic(_, _):

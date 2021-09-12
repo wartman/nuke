@@ -1,6 +1,6 @@
 package nuke;
 
-class UnitTools {
+class CssTools {
   public macro static function px(value:haxe.macro.Expr.ExprOf<Float>) {
     return nuke.internal.UnitGenerator.generateUnit(value, 'px');
   }

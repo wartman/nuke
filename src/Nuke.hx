@@ -1,3 +1,3 @@
 @:noUsing typedef Css = nuke.Css;
-typedef UnitTools = nuke.UnitTools;
+typedef CssTools = nuke.CssTools;
 typedef ClassName = nuke.ClassName; 

@@ -25,17 +25,16 @@ function extractStaticValue(value:Expr):Option<String> {
     case EConst(CString(s, _)): Some(s);
     case EConst(CInt(s)): Some(Std.string(s));
     case EConst(CFloat(s)): Some(Std.string(s));
-    case EArray(e1, e2): switch [ extractStaticValue(e1), extractStaticValue(e2) ] {
-      case [ Some(v1), Some(v2) ]: Some('$v1 $v2');
-      default: None;
-    }
+    case EArrayDecl(exprs): mergeList(exprs, ' ');
     case ECall(e, params): switch e.expr {
       // Note: we need to handle this manually to ensure that generated
       //       properties can be extracted. This may just mean we need to
       //       find a better way to detect if a value is static :V
-      case EField(a, b): switch generateUnitfromProperty(a, b) {
-        case Some(e): extractStaticValue(e);
-        case None: None;
+      case EField(a, b): switch a.expr {
+        default: switch generateUnitfromProperty(a, b) {
+          case Some(e): extractStaticValue(e);
+          case None: None;
+        }
       }
       default: None;
     }
@@ -53,13 +52,22 @@ function extractStaticValue(value:Expr):Option<String> {
         case OpAdd: Some('calc($v1 + $v2)');
         case OpSub: Some('calc($v1 - $v2)');
         case OpMult: Some('calc($v1 * $v2)');
-        case OpDiv:  Some('calc($v1 / $v2)');
+        case OpDiv: Some('calc($v1 / $v2)');
         default: None;
       }
       default: None;
     }
     default: None;
   }
+}
+
+function mergeList(items:Array<Expr>, join:String):Option<String> {
+  var out:Array<String> = [];
+  for (expr in items) switch extractStaticValue(expr) {
+    case Some(v): out.push(v);
+    case None: return None;
+  }
+  return Some(out.join(join));
 }
 
 private function getField(a:Expr, name:String, pos):Option<ClassField> {
