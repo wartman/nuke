@@ -47,8 +47,8 @@ abstract Atom(AtomType) from AtomType {
     return switch this {
       case AtomChild(selector, atom) | AtomAtRule(selector, atom): 
         atom.getHash() + '-' + selector.hash();
-      case AtomStatic(className, _): 
-        className;
+      case AtomStatic(hash, _): 
+        hash;
       case AtomDynamic(_, _): 
         toCss().hash().withPrefix();
       case AtomPrerendered(hash): 
@@ -63,7 +63,7 @@ abstract Atom(AtomType) from AtomType {
 
   public function toCss():String {
     return switch this {
-      case AtomChild(_, atom) | AtomAtRule(_, atom): atom.toCss();
+      case AtomAtRule(_, atom) | AtomChild(_, atom): atom.toCss();
       case AtomStatic(_, css): css;
       case AtomDynamic(prop, value): '$prop:$value';
       case AtomPrerendered(_): '';
@@ -74,8 +74,12 @@ abstract Atom(AtomType) from AtomType {
     return switch this {
       case AtomChild(selector, atom):
         '.' + getHash() + selector + ' {${atom.toCss()}}';
-      case AtomAtRule(atRule, atom):
-        '@$atRule { .${getHash()} {${atom.toCss()}} }';
+      case AtomAtRule(atRule, atom): switch atom.unwrap() {
+        case AtomChild(selector, atom):
+          '@$atRule { .${getHash()}${selector} {${atom.toCss()}} }';
+        default:
+          '@$atRule { .${getHash()} {${atom.toCss()}} }';
+      }
       case AtomStatic(className, css):
         '.$className {$css}';
       case AtomDynamic(_, _):
@@ -83,5 +87,9 @@ abstract Atom(AtomType) from AtomType {
       case AtomPrerendered(_): 
         '';
     }
+  }
+
+  inline function unwrap():AtomType {
+    return this;
   }
 }

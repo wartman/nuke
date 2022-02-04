@@ -21,7 +21,7 @@ class CssExporter {
   static function requestExport() {
     if (!isInitialized) {
       isInitialized = true;
-      if (!Context.defined('nuke.ignore')) {
+      if (!Context.defined('nuke.ignore') && !Context.defined('display')) {
         Context.onAfterGenerate(() -> {
           File.saveContent(getFilename(), Engine.getInstance().stylesToString());
         });

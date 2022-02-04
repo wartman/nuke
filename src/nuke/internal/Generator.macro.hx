@@ -1,10 +1,10 @@
 package nuke.internal;
 
-import nuke.internal.StaticExtractor.mergeList;
 import haxe.ds.Option;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import nuke.internal.Hash.hash;
+import nuke.internal.StaticExtractor.mergeList;
 import nuke.internal.Parser.generateCssPropertyName;
 import nuke.internal.StaticExtractor.extractStaticValue;
 
@@ -141,7 +141,11 @@ private function generateAtom(expr:CssExpr, ?parent:String, ?atRule:String):Arra
       }
       exprs = exprs.concat(generate(children, parent, wrapper));
     case CssRule(selector, children):
-      exprs = exprs.concat(generate(children, parent != null ? parent + ' ' + selector : ' ' + selector ));
+      exprs = exprs.concat(generate(
+        children,
+        parent != null ? parent + ' ' + selector : ' ' + selector,
+        atRule
+      ));
     case CssAtom(property, value):
       value = prepareValue(value);
       var expr = switch extractStaticValue(value) {
@@ -186,22 +190,28 @@ private function prepareValue(expr:Expr):Expr {
         expr: EArrayDecl(values.map(prepareValue)),
         pos: expr.pos
       };
-    case ECall(e, params): 
+    case ECall(e, params):
       switch e.expr {
         case EConst(CIdent(name)): switch name {
-          case 'list': switch mergeList(params, ',') {
-            case Some(v):
-              macro $v{v};
-            case None: 
-              macro [ $a{params} ].join(',');
-          }
-          default: switch mergeList(params, ',') {
-            case Some(v): 
-              var str = name + '(' + v + ')';
-              return macro $v{v};
-            case None: 
-              macro $v{name} + '(' + [ $a{params} ].join(',') + ')';
-          }
+          case 'list':
+            var exprs = params.map(prepareValue);
+            switch mergeList(exprs, ',') {
+              case Some(v):
+                macro $v{v};
+              case None: 
+                macro [ $a{exprs} ].join(',');
+            }
+          default:
+            var exprs = params.map(prepareValue);
+            switch mergeList(exprs, ',') {
+              case Some(v): 
+                name = generateCssPropertyName(name);
+                var str = name + '(' + v + ')';
+                return macro $v{str};
+              case None:
+                name = generateCssPropertyName(name);
+                macro $v{name} + '(' + [ $a{exprs} ].join(',') + ')';
+            }
         }
         default: expr;
       }

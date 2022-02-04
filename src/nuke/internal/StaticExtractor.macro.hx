@@ -22,6 +22,7 @@ function extractStaticValue(value:Expr):Option<String> {
         }
       }
       None;
+    case EParenthesis(e): extractStaticValue(e);
     case EConst(CString(s, _)): Some(s);
     case EConst(CInt(s)): Some(Std.string(s));
     case EConst(CFloat(s)): Some(Std.string(s));
