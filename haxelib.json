@@ -1,0 +1,10 @@
+{
+  "name": "nuke",
+  "description": "Atomic CSS for Haxe",
+  "classPath": "src",
+  "contributors": ["wartman"],
+  "version": "0.0.1",
+  "releasenote": "Prerelease",
+  "dependencies": {},
+  "license": "MIT"
+}
