@@ -9,8 +9,7 @@ class Engine {
     if (instance == null) { 
       instance = new Engine(
         #if (js && !nodejs)
-          new DomInjector()
-          // #if debug new DomInjector() #else new CssOmInjector() #end
+          #if debug new DomInjector() #else new CssOmInjector() #end
         #else
           new StaticInjector()
         #end

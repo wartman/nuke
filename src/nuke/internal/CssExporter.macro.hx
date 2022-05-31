@@ -3,7 +3,6 @@ package nuke.internal;
 import sys.io.File;
 import haxe.macro.Context;
 import haxe.macro.Compiler;
-import nuke.injector.StaticInjector;
 
 using haxe.io.Path;
 
@@ -22,7 +21,7 @@ class CssExporter {
     if (!isInitialized) {
       isInitialized = true;
       if (!Context.defined('nuke.ignore') && !Context.defined('display')) {
-        Context.onAfterGenerate(() -> {
+        Context.onGenerate(_ -> {
           File.saveContent(getFilename(), Engine.getInstance().stylesToString());
         });
       }
@@ -31,7 +30,8 @@ class CssExporter {
 
   static function getFilename() {
     return switch Context.definedValue('nuke.output') {
-      case abs = _.charAt(0) => '.' | '/': abs.withExtension('css');
+      case abs = _.charAt(0) => '.' | '/': 
+        abs.withExtension('css');
       case relative:
         Path.join([
           sys.FileSystem.absolutePath(Compiler.getOutput().directory()),

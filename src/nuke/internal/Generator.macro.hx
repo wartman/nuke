@@ -1,6 +1,5 @@
 package nuke.internal;
 
-import haxe.ds.Option;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import nuke.internal.Hash.hash;
@@ -193,6 +192,8 @@ private function prepareValue(expr:Expr):Expr {
     case ECall(e, params):
       switch e.expr {
         case EConst(CIdent(name)): switch name {
+          case 'theme':
+            extractCustomProperty(params, e.pos);
           case 'list':
             var exprs = params.map(prepareValue);
             switch mergeList(exprs, ',') {
@@ -216,5 +217,40 @@ private function prepareValue(expr:Expr):Expr {
         default: expr;
       }
     default: expr;
+  }
+}
+
+function extractCustomProperty(params:Array<Expr>, pos) {
+  function getName(c:Constant) {
+    var name = switch c {
+      case CString(s, _): s;
+      case CIdent(s): s;
+      default: 
+        Context.error('Expected a string or an identifier', pos);
+    }
+    
+    if (!name.startsWith('--')) {
+      name = '--' + name;
+    }
+
+    return name;
+  }
+
+  return switch params {
+    case [ { expr: EConst(c) } ]:
+      var name = getName(c);
+      macro $v{'var($name)'};
+    case [ { expr: EConst(c) }, expr ]:
+      var name = getName(c);
+      return switch extractStaticValue(expr) {
+        case Some(v):
+          var css = 'var($name,$v)';
+          return macro $v{css};
+        case None:
+          var value = prepareValue(expr);
+          return macro 'var(' + $v{name} + ',' + ${value} + ')';
+      }
+    default:
+      Context.error('Too many arguments', pos);
   }
 }

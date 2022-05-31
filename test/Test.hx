@@ -6,6 +6,10 @@ class Test {
   static var width = 150.px();
 
   static function main() {
+    Theme.global({
+      'bg-color': 'green'
+    });
+
     Css.global({
       body: {
         padding: 'none',
@@ -18,13 +22,13 @@ class Test {
     });
 
     var boxStyle = Css.atoms({
-      color: 'blue',
-      backgroundColor: 'green',
+      color: theme('font-color', 'yellow'),
+      backgroundColor: Theme.get('bg-color'),
       height: 130.px() + 50.pct(),
       '@media screen and (min-width: 50px)': {
         width: 20.px()
       }
-    });
+    }).with(Theme.define({ 'bg-color': 'purple' }));
     
     var el = Browser.document.createDivElement();
     Browser.document.body.appendChild(el);

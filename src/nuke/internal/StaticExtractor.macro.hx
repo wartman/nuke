@@ -1,10 +1,10 @@
 package nuke.internal;
 
-import nuke.internal.UnitGenerator.generateUnitfromProperty;
+import haxe.ds.Option;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.ds.Option;
 import haxe.macro.Type.ClassField;
+import nuke.internal.UnitGenerator.generateUnitfromProperty;
 
 using haxe.macro.Tools;
 
@@ -30,7 +30,7 @@ function extractStaticValue(value:Expr):Option<String> {
     case ECall(e, params): switch e.expr {
       // Note: we need to handle this manually to ensure that generated
       //       properties can be extracted. This may just mean we need to
-      //       find a better way to detect if a value is static :V
+      //       find a better way to detect if a value is static.
       case EField(a, b): switch a.expr {
         default: switch generateUnitfromProperty(a, b) {
           case Some(e): extractStaticValue(e);
