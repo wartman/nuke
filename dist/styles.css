@@ -1,9 +1,11 @@
 :root{--bg-color:green}
 body{padding:none} body{background-color:blue} body{font:"Helvetica",sans-serif} div{padding:10px}
-._nuA0FC99A7 {color:var(--font-color,yellow)}
+._nu1521D12C {color:var(--font-color,var(--app-font-color,orange))}
+._nuDD6E6E62 {background-color:var(--bg-color)}
 ._nu250D6E2F {height:calc(130px + 50%)}
 @media screen and (min-width: 50px) { ._nuDB1C891B-B49ADB4F {width:20px} }
 ._nu68D4DAC {--bg-color:purple}
+._nu72BBBE69 {--font-color:grey}
 ._nuDA292DF2 {height:130px}
 ._nuB2E1EB62 {background-color:#cccccc}
 ._nu1FA5EC6-2CF0C431:hover {background-color:#555555}

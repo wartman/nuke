@@ -4,6 +4,8 @@ using Nuke;
 
 class Test {
   static var width = 150.px();
+  static final fontColor = Theme.property('app-font-color', 'orange');
+  static final bgColor = Theme.property('bg-color');
 
   static function main() {
     Theme.global({
@@ -22,13 +24,16 @@ class Test {
     });
 
     var boxStyle = Css.atoms({
-      color: theme('font-color', 'yellow'),
-      backgroundColor: Theme.get('bg-color'),
+      color: theme('font-color', fontColor),
+      backgroundColor: bgColor,
       height: 130.px() + 50.pct(),
       '@media screen and (min-width: 50px)': {
         width: 20.px()
       }
-    }).with(Theme.define({ 'bg-color': 'purple' }));
+    }).with(Theme.define({ 
+      'bg-color': 'purple',
+      'font-color': 'grey'
+    }));
     
     var el = Browser.document.createDivElement();
     Browser.document.body.appendChild(el);

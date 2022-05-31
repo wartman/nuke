@@ -9,8 +9,8 @@ class Theme {
     return nuke.internal.ThemeGenerator.generateCustomPropertyAtoms(props);
   }
 
-  public macro static function set(name, value) {
-    return nuke.internal.ThemeGenerator.generateRootCustomProperties({
+  public macro static function defineProperty(name, value) {
+    return nuke.internal.ThemeGenerator.generateCustomPropertyAtoms({
       expr: EObjectDecl([
         { field: switch name.expr {
           case EConst(CIdent(s)) | EConst(CString(s, _)): s;
@@ -21,8 +21,7 @@ class Theme {
     });
   }
 
-  // @todo: Currently this method is NOT statically extractable.
-  public macro static function get(name, ?def) {
+  public macro static function property(name, ?def) {
     var params = switch def {
       case null | { expr:EConst(CIdent('null')), pos: _ } : [name];
       default: [name, def];
