@@ -4,12 +4,14 @@ using Nuke;
 
 class Test {
   static var width = 150.px();
-  static final fontColor = Theme.property('app-font-color', 'orange');
+  static final fontColor = Theme.property(app.font.color, 'orange');
   static final bgColor = Theme.property('bg-color');
 
   static function main() {
     Theme.global({
-      'bg-color': 'green'
+      bg: {
+        color: 'green'
+      }
     });
 
     Css.global({
@@ -24,15 +26,21 @@ class Test {
     });
 
     var boxStyle = Css.atoms({
-      color: theme('font-color', fontColor),
-      backgroundColor: bgColor,
+      color: theme(font.color, fontColor),
+      fontFamily: theme(font.family),
+      backgroundColor: theme(bg.color),
       height: 130.px() + 50.pct(),
       '@media screen and (min-width: 50px)': {
         width: 20.px()
       }
-    }).with(Theme.define({ 
-      'bg-color': 'purple',
-      'font-color': 'grey'
+    }).with(Theme.define({
+      bg: {
+        color: 'purple'
+      },
+      font: {
+        color: 'grey',
+        family: list('"Helvetica"', 'sans-serif')
+      }
     }));
     
     var el = Browser.document.createDivElement();

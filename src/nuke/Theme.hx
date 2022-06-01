@@ -22,10 +22,14 @@ class Theme {
   }
 
   public macro static function property(name, ?def) {
+    var varName = nuke.internal.ThemeGenerator.exprToVarName(name);
+    var name = macro $v{varName};
     var params = switch def {
       case null | { expr:EConst(CIdent('null')), pos: _ } : [name];
       default: [name, def];
     }
-    return nuke.internal.Generator.extractCustomProperty(params, name.pos);
+    return nuke.internal.Generator.prepareValue(
+      macro @:pos(name.pos) theme($a{params})
+    );
   }
 }

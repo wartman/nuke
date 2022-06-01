@@ -6,6 +6,7 @@ import nuke.internal.Hash.hash;
 import nuke.internal.StaticExtractor.mergeList;
 import nuke.internal.Parser.generateCssPropertyName;
 import nuke.internal.StaticExtractor.extractStaticValue;
+import nuke.internal.ThemeGenerator.exprToVarName;
 
 using Lambda;
 using StringTools;
@@ -92,12 +93,17 @@ function generateMediaQuery(query:Expr):String {
         }
         default:
           var name = generateCssPropertyName(f.field);
-          switch extractStaticValue(f.expr) {
-            case None:
-              Context.error('Only static values are allowed in media queries.', f.expr.pos);
-            case Some(value):
-              selector.push('(${name}: ${value})');
+          var value = switch prepareValue(f.expr, true).expr {
+            case EConst(CString(s, _)): s;
+            default: throw 'assert';
           }
+          selector.push('(${name}: ${value})');
+          // switch extractStaticValue(f.expr) {
+          //   case None:
+          //     Context.error('Only static values are allowed in media queries.', f.expr.pos);
+          //   case Some(value):
+          //     selector.push('(${name}: ${value})');
+          // }
       }
 
       '@media ' + selector.join(' and ');
@@ -182,75 +188,85 @@ private function generateAtom(expr:CssExpr, ?parent:String, ?atRule:String):Arra
   return exprs;
 }
 
-private function prepareValue(expr:Expr):Expr {
+function prepareValue(expr:Expr, ?onlyStaticValues = false):Expr {
   return switch expr.expr {
     case EArrayDecl(values):
       return {
-        expr: EArrayDecl(values.map(prepareValue)),
+        expr: EArrayDecl(values.map(value -> prepareValue(value, onlyStaticValues))),
         pos: expr.pos
       };
+    case EBinop(op, e1, e2):
+      var prepared = { 
+        expr: EBinop(op, prepareValue(e1, onlyStaticValues), prepareValue(e2, onlyStaticValues)), 
+        pos: expr.pos 
+      };
+      return switch extractStaticValue(prepared) {
+        case Some(v): macro $v{v};
+        case None if (!onlyStaticValues): prepared;
+        case None:
+          Context.error('Only static values are allowed here', expr.pos);
+      }
     case ECall(e, params):
       switch e.expr {
         case EConst(CIdent(name)): switch name {
-          case 'theme':
-            extractCustomProperty(params, e.pos);
           case 'list':
-            var exprs = params.map(prepareValue);
+            var exprs = params.map(value -> prepareValue(value, onlyStaticValues));
             switch mergeList(exprs, ',') {
               case Some(v):
                 macro $v{v};
-              case None: 
+              case None if (!onlyStaticValues): 
                 macro [ $a{exprs} ].join(',');
+              case None:
+                Context.error('Only static values are allowed here', expr.pos);
             }
           default:
-            var exprs = params.map(prepareValue);
+            var exprs = params.map(value -> prepareValue(value, onlyStaticValues));
+
+            // @todo: This is kinda hacky
+            if (name == 'theme') {
+              name = 'var';
+              if (exprs.length > 2) {
+                Context.error('Too many params', e.pos);
+              }
+              if (exprs.length < 1) {
+                Context.error('Requires param', e.pos);
+              }
+              switch exprs[0].expr {
+                case EConst(CString(s, k)):
+                  exprs[0].expr = EConst(CString('--' + s, k));
+                case EField(_, _):
+                  exprs[0].expr = EConst(CString(exprToVarName(exprs[0])));
+                default:
+                  Context.error('expected a string', exprs[0].pos);
+              }
+            }
+
             switch mergeList(exprs, ',') {
               case Some(v): 
                 name = generateCssPropertyName(name);
                 var str = name + '(' + v + ')';
                 return macro $v{str};
-              case None:
+              case None if (!onlyStaticValues):
                 name = generateCssPropertyName(name);
                 macro $v{name} + '(' + [ $a{exprs} ].join(',') + ')';
+              case None:
+                Context.error('Only static values are allowed here', expr.pos);
             }
         }
-        default: expr;
+        default:
+          if (onlyStaticValues) return switch extractStaticValue(expr) {
+            case Some(v): macro $v{v};
+            case None:
+              Context.error('Only static values are allowed here', expr.pos);
+          }
+          expr;
       }
-    default: expr;
-  }
-}
-
-function extractCustomProperty(params:Array<Expr>, pos) {
-  function getName(c:Constant) {
-    var name = switch c {
-      case CString(s, _): s;
-      case CIdent(s): s;
-      default: 
-        Context.error('Expected a string or an identifier', pos);
-    }
-    
-    if (!name.startsWith('--')) {
-      name = '--' + name;
-    }
-
-    return name;
-  }
-
-  return switch params {
-    case [ { expr: EConst(c) } ]:
-      var name = getName(c);
-      macro $v{'var($name)'};
-    case [ { expr: EConst(c) }, expr ]:
-      var name = getName(c);
-      return switch extractStaticValue(expr) {
-        case Some(v):
-          var css = 'var($name,$v)';
-          return macro $v{css};
+    default: 
+      if (onlyStaticValues) return switch extractStaticValue(expr) {
+        case Some(v): macro $v{v};
         case None:
-          var value = prepareValue(expr);
-          return macro 'var(' + $v{name} + ',' + ${value} + ')';
+          Context.error('Only static values are allowed here', expr.pos);
       }
-    default:
-      Context.error('Too many arguments', pos);
+      expr;
   }
 }
