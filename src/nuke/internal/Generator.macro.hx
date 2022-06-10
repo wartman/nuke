@@ -243,11 +243,11 @@ function prepareValue(expr:Expr, ?onlyStaticValues = false):Expr {
 
             switch mergeList(exprs, ',') {
               case Some(v): 
-                name = generateCssPropertyName(name);
+                // name = generateCssPropertyName(name);
                 var str = name + '(' + v + ')';
                 return macro $v{str};
               case None if (!onlyStaticValues):
-                name = generateCssPropertyName(name);
+                // name = generateCssPropertyName(name);
                 macro $v{name} + '(' + [ $a{exprs} ].join(',') + ')';
               case None:
                 Context.error('Only static values are allowed here', expr.pos);

@@ -2,6 +2,7 @@ package nuke.internal;
 
 import haxe.macro.Expr;
 import haxe.macro.Context;
+import nuke.internal.Parser.generateCssPropertyName;
 
 using StringTools;
 
@@ -34,8 +35,9 @@ function generateRootCustomProperties(props:Expr) {
 function exprToVarName(expr:Expr) {
   return switch expr.expr {
     case EField(e, field):
-      return exprToVarName(e) + '-' + field;
+      return exprToVarName(e) + '-' + generateCssPropertyName(field);
     case EConst(CIdent(s)) | EConst(CString(s, _)):
+      s = generateCssPropertyName(s);
       if (s.startsWith('--')) return s;
       return '--' + s;
     default:
@@ -48,7 +50,8 @@ private function flatten(prefix:Null<String>, props:Array<ObjectField>) {
   var out:Array<ObjectField> = [];
 
   for (prop in props) {
-    var name = prefix != null ? prefix + '-' + prop.field : '--' + prop.field;
+    var field = generateCssPropertyName(prop.field);
+    var name = prefix != null ? prefix + '-' + field : '--' + field;
     switch prop.expr.expr {
       case EObjectDecl(fields):
         out = out.concat(flatten(name, fields));
