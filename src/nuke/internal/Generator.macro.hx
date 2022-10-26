@@ -95,7 +95,7 @@ private function generateRawCssExprs(exprs:Array<CssExpr>, ?parent:String, ?atRu
     out.push('$parent {${body.join(';')}}');
   }
 
-  return out.join(' ');
+  return out.join('\n');
 }
 
 function generateMediaQuery(query:Expr):String {
@@ -120,6 +120,12 @@ function generateMediaQuery(query:Expr):String {
           default:
             Context.error('Expected a string', f.expr.pos);
         }
+        case 'and': 
+          var value = switch prepareValue(f.expr, true).expr {
+            case EConst(CString(s, _)): s;
+            default: throw 'assert';
+          }
+          selector.push('(${value})');
         default:
           var name = generateCssPropertyName(f.field);
           var value = switch prepareValue(f.expr, true).expr {

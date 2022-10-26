@@ -23,7 +23,7 @@ class Test {
       font: list('"Times New Roman"')
     });
 
-    Theme.mediaQuery('prefers-reduced-motion', {
+    Theme.mediaQuery({ type: 'screen', and: 'prefers-reduced-motion' }, {
       bg: {
         color: 'white'
       }
