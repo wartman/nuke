@@ -45,7 +45,7 @@ private function parseStmt(name:Null<String>, e:Expr):CssExpr {
     case EObjectDecl(fields) if (fields.length > 0):
       exprs.push(parseRule(name, fields, e.pos));
     case EBlock(_) | EObjectDecl(_):
-      // skip
+      // Empty declarations -- skip
     default:
       exprs.push(parseProperty(name, e));
   }

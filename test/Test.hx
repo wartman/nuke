@@ -12,6 +12,20 @@ class Test {
       bg: {
         color: 'green',
         width: 500.px()
+      },
+      font: list('"Helvetica"', 'sans-serif')
+    });
+
+    Theme.select('.foo', {
+      bg: {
+        color: 'red'
+      },
+      font: list('"Times New Roman"')
+    });
+
+    Theme.mediaQuery('prefers-reduced-motion', {
+      bg: {
+        color: 'white'
       }
     });
 
@@ -19,7 +33,7 @@ class Test {
       body: {
         padding: 'none',
         backgroundColor: 'blue',
-        font: list('"Helvetica"', 'sans-serif')
+        font: theme(font)
       },
       div: {
         padding: '10px'
@@ -30,6 +44,16 @@ class Test {
       color: 'red',
       fontFamily: 'other',
       backgroundColor: theme(bg.color),
+      div: {
+        color: 'blue',
+        width: 500.px(),
+        '&:hover': {
+          color: 'orange'
+        }
+      },
+      '&:hover': {
+        color: 'orange'
+      }
     });
 
     var boxStyle = Css.atoms({

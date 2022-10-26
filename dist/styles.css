@@ -1,6 +1,8 @@
-:root {--bg-color:green;--bg-width:500px}
-body {padding:none;background-color:blue;font:"Helvetica",sans-serif} div {padding:10px}
-._nu48F038D3 {color:red;font-family:other;background-color:var(--bg-color)}
+:root {--bg-color:green;--bg-width:500px;--font:"Helvetica",sans-serif}
+.foo {--bg-color:red;--font:"Times New Roman"}
+@media prefers-reduced-motion {:root {--bg-color:white}}
+body {padding:none;background-color:blue;font:var(--font)} div {padding:10px}
+._nu28944510 div:hover {color:orange} ._nu28944510 div {color:blue;width:500px} ._nu28944510:hover {color:orange} ._nu28944510 {color:red;font-family:other;background-color:var(--bg-color)}
 ._nu7C68EA7A {color:var(--font-color,var(----app-font-color,orange))}
 ._nuDBCA8591 {font-family:var(--font-family)}
 ._nuDD6E6E62 {background-color:var(--bg-color)}

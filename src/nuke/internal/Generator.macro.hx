@@ -20,22 +20,26 @@ function generate(exprs:Array<CssExpr>, ?parent:String, ?atRule:String):Array<Ex
 function generateRule(exprs:Array<CssExpr>, ?parent:String, ?atRule:String):Expr {
   var module = Context.getLocalModule();
   var pos = Context.currentPos().getInfos();
-  var key = nuke.internal.Hash.hash('${module}_${pos.min}_${pos.max}').withPrefix();
+  var key = hash('${module}_${pos.min}_${pos.max}').withPrefix();
   var css = generateRawCssExprs(exprs, '.${key}');
+
   if (CssExporter.shouldExport()) {
     Engine.getInstance().addRawCss(key, css);
     return macro nuke.Atom.createPrerenderedAtom($v{key});
   }
+  
   return macro nuke.Atom.createStaticAtom($v{key}, $v{css}).inject();
 }
 
 function generateRawCss(exprs:Array<CssExpr>):Expr {
   var css = generateRawCssExprs(exprs);
-  var key = nuke.internal.Hash.hash(css); // todo: will this be slow?
+  var key = hash(css);
+  
   if (CssExporter.shouldExport()) {
     Engine.getInstance().addRawCss(key, css);
     return macro 0;
   }
+
   return macro nuke.Engine.getInstance().addRawCss($v{key}, $v{css});
 }
 
@@ -45,7 +49,7 @@ private function generateRawCssExprs(exprs:Array<CssExpr>, ?parent:String, ?atRu
 
   function generateRawCssExpr(expr:CssExpr) switch expr.expr {
     case CssRule(selector, children):
-      out.push(generateRawCssExprs(children, selector, atRule));
+      out.push(generateRawCssExprs(children, parent != null ? parent + ' ' + selector : selector, atRule));
     case CssChildren(children):
       out.push(generateRawCssExprs(children, null, atRule));
     case CssWrapper(wrapper, children) if (wrapper.contains('&')):
@@ -257,8 +261,8 @@ function prepareValue(expr:Expr, ?onlyStaticValues = false):Expr {
                 Context.error('Requires param', e.pos);
               }
               switch exprs[0].expr {
-                case EConst(CString(s, k)):
-                  exprs[0].expr = EConst(CString('--' + s, k));
+                case EConst(CString(s, _)) | EConst(CIdent(s)):
+                  exprs[0].expr = EConst(CString('--' + s));
                 case EField(_, _):
                   exprs[0].expr = EConst(CString(exprToVarName(exprs[0])));
                 default:
