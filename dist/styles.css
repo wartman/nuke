@@ -1,5 +1,6 @@
-:root{--bg-color:green}
-body{padding:none} body{background-color:blue} body{font:"Helvetica",sans-serif} div{padding:10px}
+:root {--bg-color:green;--bg-width:500px}
+body {padding:none;background-color:blue;font:"Helvetica",sans-serif} div {padding:10px}
+._nu48F038D3 {color:red;font-family:other;background-color:var(--bg-color)}
 ._nu7C68EA7A {color:var(--font-color,var(----app-font-color,orange))}
 ._nuDBCA8591 {font-family:var(--font-family)}
 ._nuDD6E6E62 {background-color:var(--bg-color)}

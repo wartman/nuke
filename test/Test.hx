@@ -10,7 +10,8 @@ class Test {
   static function main() {
     Theme.global({
       bg: {
-        color: 'green'
+        color: 'green',
+        width: 500.px()
       }
     });
 
@@ -23,6 +24,12 @@ class Test {
       div: {
         padding: '10px'
       }
+    });
+
+    var test = Css.rule({
+      color: 'red',
+      fontFamily: 'other',
+      backgroundColor: theme(bg.color),
     });
 
     var boxStyle = Css.atoms({
@@ -41,7 +48,7 @@ class Test {
         color: 'grey',
         family: list('"Helvetica"', 'sans-serif')
       }
-    }));
+    })).with(test);
     
     var el = Browser.document.createDivElement();
     Browser.document.body.appendChild(el);

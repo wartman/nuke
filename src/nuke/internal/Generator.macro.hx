@@ -11,9 +11,22 @@ import nuke.internal.ThemeGenerator.exprToVarName;
 using Lambda;
 using StringTools;
 using nuke.internal.Prefix;
+using haxe.macro.PositionTools;
 
 function generate(exprs:Array<CssExpr>, ?parent:String, ?atRule:String):Array<Expr> {
   return exprs.map(expr -> generateAtom(expr, parent, atRule)).flatten();
+}
+
+function generateRule(exprs:Array<CssExpr>, ?parent:String, ?atRule:String):Expr {
+  var module = Context.getLocalModule();
+  var pos = Context.currentPos().getInfos();
+  var key = nuke.internal.Hash.hash('${module}_${pos.min}_${pos.max}').withPrefix();
+  var css = generateRawCssExprs(exprs, '.${key}');
+  if (CssExporter.shouldExport()) {
+    Engine.getInstance().addRawCss(key, css);
+    return macro nuke.Atom.createPrerenderedAtom($v{key});
+  }
+  return macro nuke.Atom.createStaticAtom($v{key}, $v{css}).inject();
 }
 
 function generateRawCss(exprs:Array<CssExpr>):Expr {
@@ -28,6 +41,8 @@ function generateRawCss(exprs:Array<CssExpr>):Expr {
 
 private function generateRawCssExprs(exprs:Array<CssExpr>, ?parent:String, ?atRule:String):String {
   var out:Array<String> = [];
+  var body:Array<String> = [];
+
   function generateRawCssExpr(expr:CssExpr) switch expr.expr {
     case CssRule(selector, children):
       out.push(generateRawCssExprs(children, selector, atRule));
@@ -56,16 +71,26 @@ private function generateRawCssExprs(exprs:Array<CssExpr>, ?parent:String, ?atRu
       value = prepareValue(value);
       switch extractStaticValue(value) {
         case Some(value):
-          var rule = '$parent{$property:$value}';
-          if (atRule != null) rule = '@$atRule {$rule}';
-          out.push(rule);
+          var def = '$property:$value';
+          if (atRule != null) {
+            // todo: group these values somehow
+            var rule = '$parent {$def}';
+            out.push('@$atRule {$rule}');
+          } else {
+            body.push(def);
+          }
         case None:
           Context.error('Only static values are allowed in raw css', expr.pos);
       }
     case CssRaw(css):
       Context.error('Raw strings are not allowed when creating raw css', expr.pos);
   }
+  
   for (expr in exprs) generateRawCssExpr(expr);
+  if (body.length > 0) {
+    out.push('$parent {${body.join(';')}}');
+  }
+
   return out.join(' ');
 }
 
