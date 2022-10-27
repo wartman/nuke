@@ -26,14 +26,23 @@ class Test {
     Theme.mediaQuery({ type: 'screen', and: 'prefers-reduced-motion' }, {
       bg: {
         color: 'white'
-      }
+      },
+      font: list('"Times New Roman"')
+    });
+
+    Theme.mediaQuery({ prefersColorScheme: 'dark' }, {
+      bg: {
+        color: 'black'
+      },
+      font: list('"Helvetica"', 'sans-serif'),
+      fontColor: 'white'
     });
 
     Css.global({
       body: {
         padding: 'none',
-        backgroundColor: 'blue',
-        font: theme(font)
+        backgroundColor: theme(bg.color),
+        font: [ theme(font), theme(fontColor) ]
       },
       div: {
         padding: '10px'

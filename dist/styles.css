@@ -1,12 +1,13 @@
 :root {--bg-color:green;--bg-width:500px;--font:"Helvetica",sans-serif}
 .foo {--bg-color:red;--font:"Times New Roman"}
-@media screen and (prefers-reduced-motion) {:root {--bg-color:white}}
-body {padding:none;background-color:blue;font:var(--font)}
+@media screen and (prefers-reduced-motion) { :root {--bg-color:white;--font:"Times New Roman"} }
+@media (prefers-color-scheme: dark) { :root {--bg-color:black;--font:"Helvetica",sans-serif;--font-color:white} }
+body {padding:none;background-color:var(--bg-color);font:var(--font) var(--fontColor)}
 div {padding:10px}
-._nuB3E56F35 div:hover {color:orange}
-._nuB3E56F35 div {color:blue;width:500px}
-._nuB3E56F35:hover {color:orange}
-._nuB3E56F35 {color:red;font-family:other;background-color:var(--bg-color)}
+._nu39DF7250 div:hover {color:orange}
+._nu39DF7250 div {color:blue;width:500px}
+._nu39DF7250:hover {color:orange}
+._nu39DF7250 {color:red;font-family:other;background-color:var(--bg-color)}
 ._nu7C68EA7A {color:var(--font-color,var(----app-font-color,orange))}
 ._nuDBCA8591 {font-family:var(--font-family)}
 ._nuDD6E6E62 {background-color:var(--bg-color)}

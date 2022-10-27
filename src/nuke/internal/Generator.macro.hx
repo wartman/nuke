@@ -46,6 +46,7 @@ function generateRawCss(exprs:Array<CssExpr>):Expr {
 private function generateRawCssExprs(exprs:Array<CssExpr>, ?parent:String, ?atRule:String):String {
   var out:Array<String> = [];
   var body:Array<String> = [];
+  var media:Map<String, Array<String>> = [];
 
   function generateRawCssExpr(expr:CssExpr) switch expr.expr {
     case CssRule(selector, children):
@@ -77,9 +78,10 @@ private function generateRawCssExprs(exprs:Array<CssExpr>, ?parent:String, ?atRu
         case Some(value):
           var def = '$property:$value';
           if (atRule != null) {
-            // todo: group these values somehow
-            var rule = '$parent {$def}';
-            out.push('@$atRule {$rule}');
+            if (!media.exists(atRule)) {
+              media.set(atRule, []);
+            }
+            media.get(atRule).push(def);
           } else {
             body.push(def);
           }
@@ -91,8 +93,13 @@ private function generateRawCssExprs(exprs:Array<CssExpr>, ?parent:String, ?atRu
   }
   
   for (expr in exprs) generateRawCssExpr(expr);
+  
   if (body.length > 0) {
     out.push('$parent {${body.join(';')}}');
+  }
+
+  for (atRule => body in media) {
+    out.push('@$atRule { $parent {${body.join(';')}} }');
   }
 
   return out.join('\n');
