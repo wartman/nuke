@@ -127,25 +127,21 @@ function generateMediaQuery(query:Expr):String {
           default:
             Context.error('Expected a string', f.expr.pos);
         }
-        case 'and': 
-          var value = switch prepareValue(f.expr, true).expr {
-            case EConst(CString(s, _)): s;
-            default: throw 'assert';
-          }
-          selector.push('(${value})');
         default:
           var name = generateCssPropertyName(f.field);
-          var value = switch prepareValue(f.expr, true).expr {
-            case EConst(CString(s, _)): s;
-            default: throw 'assert';
+          
+          switch f.expr.expr {
+            case EConst(CIdent('true')):
+              selector.push('(${name})');
+            case EConst(CIdent('false')):
+              selector.push('not (${name})');
+            default:
+              var value = switch prepareValue(f.expr, true).expr {
+                case EConst(CString(s, _)): s;
+                default: throw 'assert';
+              }
+              selector.push('(${name}: ${value})');
           }
-          selector.push('(${name}: ${value})');
-          // switch extractStaticValue(f.expr) {
-          //   case None:
-          //     Context.error('Only static values are allowed in media queries.', f.expr.pos);
-          //   case Some(value):
-          //     selector.push('(${name}: ${value})');
-          // }
       }
 
       '@media ' + selector.join(' and ');

@@ -23,7 +23,7 @@ class Test {
       font: list('"Times New Roman"')
     });
 
-    Theme.mediaQuery({ type: 'screen', and: 'prefers-reduced-motion' }, {
+    Theme.mediaQuery({ type: 'screen', prefersReducedMotion: true }, {
       bg: {
         color: 'white'
       },
@@ -40,7 +40,7 @@ class Test {
 
     Css.global({
       body: {
-        padding: 'none',
+        padding: 0,
         backgroundColor: theme(bg.color),
         font: [ theme(font), theme(fontColor) ]
       },
