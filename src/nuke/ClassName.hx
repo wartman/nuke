@@ -20,7 +20,8 @@ abstract ClassName(String) to String {
   }
 
   @:from public static function ofArray(parts:Array<String>) {
-    return new ClassName(parts.map(ofString).join(' '));
+    var name = parts.filter(s -> s != null).map(ofString).join(' ');
+    return new ClassName(name);
   }
 
   @:from public static function ofAtoms(parts:Array<Atom>) {

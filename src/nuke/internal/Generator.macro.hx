@@ -277,6 +277,10 @@ function prepareValue(expr:Expr, ?onlyStaticValues = false):Expr {
                 default:
                   Context.error('expected a string', exprs[0].pos);
               }
+            } else {
+              // @todo: Is there a better way to do this? Right now
+              // we don't handle cammelCase like we do with other properties.
+              name = name.replace('_', '-');
             }
 
             switch mergeList(exprs, ',') {
