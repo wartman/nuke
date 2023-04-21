@@ -52,7 +52,9 @@ class Test {
     var test = Css.rule({
       color: 'red',
       fontFamily: 'other',
-      backgroundColor: theme(bg.color),
+      backgroundColor: 'orange',
+      fontSize: 40.px(),
+      // backgroundColor: theme(bg.color),
       div: {
         color: 'blue',
         width: 500.px(),

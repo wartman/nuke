@@ -15,6 +15,10 @@ abstract Atom(AtomType) from AtomType {
     return new Atom(AtomDynamic(property, value));
   }
 
+  public inline static function createRawAtom(hash:String, css:String) {
+    return new Atom(AtomRaw(hash, css));
+  }
+
   public inline static function createStaticAtom(className:String, css:String) {
     return new Atom(AtomStatic(className, css));
   }
@@ -53,6 +57,8 @@ abstract Atom(AtomType) from AtomType {
         toCss().hash().withPrefix();
       case AtomPrerendered(hash): 
         hash;
+      case AtomRaw(hash, _):
+        hash;
     }
   }
 
@@ -67,6 +73,7 @@ abstract Atom(AtomType) from AtomType {
       case AtomStatic(_, css): css;
       case AtomDynamic(prop, value): '$prop:$value';
       case AtomPrerendered(_): '';
+      case AtomRaw(_, css): css; // @todo: This will break.
     }
   }
 
@@ -82,6 +89,8 @@ abstract Atom(AtomType) from AtomType {
       }
       case AtomStatic(className, css):
         '.$className {$css}';
+      case AtomRaw(_, css):
+        css;
       case AtomDynamic(_, _):
         '.${getHash()} {${toCss()}}';
       case AtomPrerendered(_): 

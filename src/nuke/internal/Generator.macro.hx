@@ -28,13 +28,13 @@ function generateRule(exprs:Array<CssExpr>, ?parent:String, ?atRule:String):Expr
     return macro nuke.Atom.createPrerenderedAtom($v{key});
   }
   
-  return macro nuke.Atom.createStaticAtom($v{key}, $v{css}).inject();
+  return macro nuke.Atom.createRawAtom($v{key}, $v{css}).inject();
 }
 
 function generateRawCss(exprs:Array<CssExpr>):Expr {
   var css = generateRawCssExprs(exprs);
   var key = hash(css);
-  
+
   if (CssExporter.shouldExport()) {
     Engine.getInstance().addRawCss(key, css);
     return macro 0;
@@ -280,6 +280,7 @@ function prepareValue(expr:Expr, ?onlyStaticValues = false):Expr {
             } else {
               // @todo: Is there a better way to do this? Right now
               // we don't handle cammelCase like we do with other properties.
+              // I wish CSS was consistant about this :P
               name = name.replace('_', '-');
             }
 

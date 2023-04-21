@@ -13,6 +13,7 @@ function extractStaticValue(value:Expr):Option<String> {
     case EConst(CIdent(name)):
       var local = Context.getLocalClass().get();
       var f = local.findField(name, true);
+
       if (f != null && f.isFinal) {
         return switch f.expr().expr {
           case TConst(TString(s)): Some(s);
@@ -21,6 +22,7 @@ function extractStaticValue(value:Expr):Option<String> {
           default: None;
         }
       }
+      
       None;
     case EParenthesis(e): extractStaticValue(e);
     case EConst(CString(s, _)): Some(s);
@@ -29,8 +31,8 @@ function extractStaticValue(value:Expr):Option<String> {
     case EArrayDecl(exprs): mergeList(exprs, ' ');
     case ECall(e, params): switch e.expr {
       // Note: we need to handle this manually to ensure that generated
-      //       properties can be extracted. This may just mean we need to
-      //       find a better way to detect if a value is static.
+      // properties can be extracted. This may just mean we need to
+      // find a better way to detect if a value is static.
       case EField(a, b): switch a.expr {
         default: switch generateUnitfromProperty(a, b) {
           case Some(e): extractStaticValue(e);
