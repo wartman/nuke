@@ -11,7 +11,7 @@ function generateUnit(expr:Expr, suffix:String) {
   }
 }
 
-function generateUnitfromProperty(expr:Expr, field:String):Option<Expr> {
+function generateUnitFromProperty(expr:Expr, field:String):Option<Expr> {
   return switch field {
     case 'px' | 'em' | 'rem' | 'vh' | 'vw' | 'ms' | 'fr' | 'deg':
       Some(generateUnit(expr, field));
